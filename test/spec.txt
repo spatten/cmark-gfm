@@ -7704,6 +7704,27 @@ __a<http://foo.bar/?q=__>
 <p>__a<a href="http://foo.bar/?q=__">http://foo.bar/?q=__</a></p>
 ````````````````````````````````
 
+<div class="extension">
+
+## Superscript and subscript (Markua extension)
+
+To produce superscript like the 3 in 5^3^ = 125, surround it with carets like `5^3^ = 125`.
+
+```````````````````````````````` example superscript
+Superscript: 5^3^ = 125
+.
+<p>Superscript: 5<sup>3</sup> = 125</p>
+````````````````````````````````
+
+To produce subscript like the 2 in H~2~O, surround it with single tildes like `H~2~O`.
+
+```````````````````````````````` example subscript
+Subscript: H~2~O
+.
+<p>Subscript: H<sub>2</sub>O</p>
+````````````````````````````````
+
+</div>
 
 <div class="extension">
 
