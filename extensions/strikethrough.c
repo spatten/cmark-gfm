@@ -52,7 +52,13 @@ static delimiter *insert(cmark_syntax_extension *self, cmark_parser *parser,
     goto done;
 
   delimiter_length = opener->inl_text->as.literal.len;
-  node_type = delimiter_length == 2 ? CMARK_NODE_STRIKETHROUGH : CMARK_NODE_SUBSCRIPT;
+  if (delimiter_length == 1) {
+    node_type = CMARK_NODE_SUBSCRIPT;
+  } else if (delimiter_length == 2) {
+    node_type = CMARK_NODE_STRIKETHROUGH;
+  } else {
+    goto done;
+  }
 
   if (!cmark_node_set_type(strikethrough, node_type))
     goto done;
