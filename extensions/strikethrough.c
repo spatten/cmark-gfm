@@ -3,6 +3,7 @@
 #include <render.h>
 
 cmark_node_type CMARK_NODE_STRIKETHROUGH;
+cmark_node_type CMARK_NODE_SUBSCRIPT;
 
 static cmark_node *match(cmark_syntax_extension *self, cmark_parser *parser,
                          cmark_node *parent, unsigned char character,
@@ -27,8 +28,7 @@ static cmark_node *match(cmark_syntax_extension *self, cmark_parser *parser,
   res->start_line = res->end_line = cmark_inline_parser_get_line(inline_parser);
   res->start_column = cmark_inline_parser_get_column(inline_parser) - delims;
 
-  if ((left_flanking || right_flanking) &&
-      (delims == 2 || (!(parser->options & CMARK_OPT_STRIKETHROUGH_DOUBLE_TILDE) && delims == 1))) {
+  if (left_flanking || right_flanking ) {
     cmark_inline_parser_push_delimiter(inline_parser, character, left_flanking,
                                        right_flanking, res);
   }
@@ -43,13 +43,18 @@ static delimiter *insert(cmark_syntax_extension *self, cmark_parser *parser,
   cmark_node *tmp, *next;
   delimiter *delim, *tmp_delim;
   delimiter *res = closer->next;
+  int delimiter_length = 0;
+  cmark_node_type node_type;
 
   strikethrough = opener->inl_text;
 
   if (opener->inl_text->as.literal.len != closer->inl_text->as.literal.len)
     goto done;
 
-  if (!cmark_node_set_type(strikethrough, CMARK_NODE_STRIKETHROUGH))
+  delimiter_length = opener->inl_text->as.literal.len;
+  node_type = delimiter_length == 2 ? CMARK_NODE_STRIKETHROUGH : CMARK_NODE_SUBSCRIPT;
+
+  if (!cmark_node_set_type(strikethrough, node_type))
     goto done;
 
   cmark_node_set_syntax_extension(strikethrough, self);
@@ -82,12 +87,18 @@ done:
 
 static const char *get_type_string(cmark_syntax_extension *extension,
                                    cmark_node *node) {
-  return node->type == CMARK_NODE_STRIKETHROUGH ? "strikethrough" : "<unknown>";
+  if (node->type == CMARK_NODE_STRIKETHROUGH) {
+    return "strikethrough";
+  } else if (node->type == CMARK_NODE_SUBSCRIPT) {
+    return "subscript";
+  } else {
+    return "<unknown>";
+  }
 }
 
 static int can_contain(cmark_syntax_extension *extension, cmark_node *node,
                        cmark_node_type child_type) {
-  if (node->type != CMARK_NODE_STRIKETHROUGH)
+  if (node->type != CMARK_NODE_STRIKETHROUGH && node->type != CMARK_NODE_SUBSCRIPT)
     return false;
 
   return CMARK_NODE_TYPE_INLINE_P(child_type);
@@ -96,7 +107,10 @@ static int can_contain(cmark_syntax_extension *extension, cmark_node *node,
 static void commonmark_render(cmark_syntax_extension *extension,
                               cmark_renderer *renderer, cmark_node *node,
                               cmark_event_type ev_type, int options) {
-  renderer->out(renderer, node, "~~", false, LITERAL);
+  char *tildes = "~~";
+  if (node->type == CMARK_NODE_SUBSCRIPT)
+             tildes = "~";
+  renderer->out(renderer, node, tildes, false, LITERAL);
 }
 
 static void latex_render(cmark_syntax_extension *extension,
@@ -105,7 +119,11 @@ static void latex_render(cmark_syntax_extension *extension,
   // requires \usepackage{ulem}
   bool entering = (ev_type == CMARK_EVENT_ENTER);
   if (entering) {
-    renderer->out(renderer, node, "\\sout{", false, LITERAL);
+    if (node->type == CMARK_NODE_STRIKETHROUGH) {
+      renderer->out(renderer, node, "\\sout{", false, LITERAL);
+    } else {
+      renderer->out(renderer, node, "\\textsubscript{", false, LITERAL);
+    }
   } else {
     renderer->out(renderer, node, "}", false, LITERAL);
   }
@@ -117,9 +135,17 @@ static void man_render(cmark_syntax_extension *extension,
   bool entering = (ev_type == CMARK_EVENT_ENTER);
   if (entering) {
     renderer->cr(renderer);
-    renderer->out(renderer, node, ".ST \"", false, LITERAL);
+    if (node->type == CMARK_NODE_STRIKETHROUGH) {
+      renderer->out(renderer, node, ".ST \"", false, LITERAL);
+    } else {
+      renderer->out(renderer, node, "\\*<", false, LITERAL);
+    }
   } else {
-    renderer->out(renderer, node, "\"", false, LITERAL);
+    if (node->type == CMARK_NODE_STRIKETHROUGH) {
+      renderer->out(renderer, node, "\"", false, LITERAL);
+    } else {
+      renderer->out(renderer, node, "\\*>", false, LITERAL);
+    }
     renderer->cr(renderer);
   }
 }
@@ -129,16 +155,27 @@ static void html_render(cmark_syntax_extension *extension,
                         cmark_event_type ev_type, int options) {
   bool entering = (ev_type == CMARK_EVENT_ENTER);
   if (entering) {
-    cmark_strbuf_puts(renderer->html, "<del>");
+    if (node->type == CMARK_NODE_STRIKETHROUGH) {
+      cmark_strbuf_puts(renderer->html, "<del>");
+    } else {
+      cmark_strbuf_puts(renderer->html, "<sub>");
+    }
   } else {
-    cmark_strbuf_puts(renderer->html, "</del>");
+    if (node->type == CMARK_NODE_STRIKETHROUGH) {
+      cmark_strbuf_puts(renderer->html, "</del>");
+    } else {
+      cmark_strbuf_puts(renderer->html, "</sub>");
+    }
   }
 }
 
 static void plaintext_render(cmark_syntax_extension *extension,
                              cmark_renderer *renderer, cmark_node *node,
                              cmark_event_type ev_type, int options) {
-  renderer->out(renderer, node, "~", false, LITERAL);
+  char *tildes = "~~";
+  if (node->type == CMARK_NODE_SUBSCRIPT)
+             tildes = "~";
+  renderer->out(renderer, node, tildes, false, LITERAL);
 }
 
 cmark_syntax_extension *create_strikethrough_extension(void) {
@@ -153,6 +190,7 @@ cmark_syntax_extension *create_strikethrough_extension(void) {
   cmark_syntax_extension_set_html_render_func(ext, html_render);
   cmark_syntax_extension_set_plaintext_render_func(ext, plaintext_render);
   CMARK_NODE_STRIKETHROUGH = cmark_syntax_extension_add_node(1);
+  CMARK_NODE_SUBSCRIPT = cmark_syntax_extension_add_node(1);
 
   cmark_syntax_extension_set_match_inline_func(ext, match);
   cmark_syntax_extension_set_inline_from_delim_func(ext, insert);
