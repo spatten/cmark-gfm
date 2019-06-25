@@ -145,7 +145,7 @@ City:
 cmark-gfm strikethrough rules
 
 ```````````````````````````````` example strikethrough
-~Hi~ Hello, world!
+~~Hi~~ Hello, world!
 .
 <p><del>Hi</del> Hello, world!</p>
 ````````````````````````````````
@@ -153,7 +153,7 @@ cmark-gfm strikethrough rules
 ```````````````````````````````` example strikethrough
 This ~text~ ~~is~~ ~~~curious~~~.
 .
-<p>This <del>text</del> <del>is</del> ~~~curious~~~.</p>
+<p>This <sub>text</sub> <del>is</del> ~~~curious~~~.</p>
 ````````````````````````````````
 
 `~` should not be escaped in href — https://github.com/github/markup/issues/311

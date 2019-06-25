@@ -7718,7 +7718,7 @@ Superscript: 5^3^ = 125
 
 To produce subscript like the 2 in H~2~O, surround it with single tildes like `H~2~O`.
 
-```````````````````````````````` example subscript
+```````````````````````````````` example strikethrough
 Subscript: H~2~O
 .
 <p>Subscript: H<sub>2</sub>O</p>

@@ -504,7 +504,7 @@ d | e
 A well-formed strikethrough.
 
 ```````````````````````````````` example
-A proper ~strikethrough~.
+A proper ~~strikethrough~~.
 .
 <p>A proper <del>strikethrough</del>.</p>
 ````````````````````````````````
@@ -526,9 +526,9 @@ No ~mismatch~~
 .
 <p>These are ~not strikethroughs.</p>
 <p>No, they are not~</p>
-<p>This <del>is ~ legit</del> isn't ~ legit.</p>
+<p>This <sub>is ~ legit</sub> isn't ~ legit.</p>
 <p>This is not ~~~~~one~~~~~ huge strikethrough.</p>
-<p><del>one</del> <del>two</del> ~~~three~~~</p>
+<p><sub>one</sub> <del>two</del> ~~~three~~~</p>
 <p>No ~mismatch~~</p>
 ````````````````````````````````
 
