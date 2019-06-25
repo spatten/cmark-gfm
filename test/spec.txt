@@ -5995,14 +5995,10 @@ Here are some nonentities:
 
 ```````````````````````````````` example
 &nbsp &x; &#; &#x;
-&#87654321;
 &#abcdef0;
-&ThisIsNotDefined; &hi?;
 .
 <p>&amp;nbsp &amp;x; &amp;#; &amp;#x;
-&amp;#87654321;
-&amp;#abcdef0;
-&amp;ThisIsNotDefined; &amp;hi?;</p>
+&amp;#abcdef0;</p>
 ````````````````````````````````
 
 
